@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 import torch
@@ -42,7 +43,7 @@ class PrimaryCaps(nn.Module):
 
 
 class DigitCaps(nn.Module):
-    def __init__(self, batch_size, num_capsules=10, num_routes=32 * 6 * 6, in_channels=8, out_channels=16, CUDA=False):
+    def __init__(self, batch_size, num_routes, num_capsules=10, in_channels=8, out_channels=16, CUDA=False):
         super(DigitCaps, self).__init__()
 
         self.batch_size = batch_size
@@ -124,16 +125,25 @@ class CapsNet(nn.Module):
     	primary_out_channels=32, num_digit_capsules=10, 
     	digit_out_channels=16, num_routes=None, CUDA=False):
         super(CapsNet, self).__init__()
+        
+        padding = 0
+        height = math.ceil((img_height - kernel_size + 2*padding) / 1 ) + 1
+        height = math.ceil((height - kernel_size + 2*padding) / 2 ) + 1
+        width = math.ceil((img_width - kernel_size + 2*padding) / 1 ) + 1
+        width = math.ceil((width - kernel_size + 2*padding) / 2 ) + 1
 
-        self.num_routes = primary_out_channels * 6 * 6
+        self.num_routes = primary_out_channels * height * width
 
         self.conv_layer = ConvLayer(in_channels=conv_in_channels, out_channels=conv_out_channels, 
         							kernel_size=kernel_size)
+        
         self.primary_capsules = PrimaryCaps(num_capsules=num_primary_capsules, in_channels=conv_out_channels, 
         						out_channels=primary_out_channels, kernel_size=kernel_size)
+        
         self.digit_capsules = DigitCaps(batch_size=batch_size, num_capsules=num_digit_capsules, 
         						num_routes=self.num_routes, in_channels=num_primary_capsules, 
         						out_channels=digit_out_channels, CUDA=CUDA)
+        
         self.decoder = Decoder(num_class=num_class, img_height=img_height, 
         						img_width=img_width, CUDA=CUDA)
         
