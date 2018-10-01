@@ -13,6 +13,7 @@ from torch.autograd import Variable
 from torch.optim import Adam
 from torchvision import transforms
 
+from data_loader import DataLoader
 from model import CapsNet
 
 
